@@ -43,7 +43,13 @@ class UsersDataTable extends DataTable
      */
     public function query(User $model): QueryBuilder
     {
-        return $model->newQuery();
+        $startDate = request('startDate')??null;
+        $endDate = request('endDate')??null;
+        $query = $model->newQuery();
+        if($startDate && $endDate){
+            $query->whereBetween('created_at',[$startDate,$endDate]);
+        }
+        return $query;
     }
 
     /**
@@ -54,7 +60,10 @@ class UsersDataTable extends DataTable
         return $this->builder()
                     ->setTableId('users-table')
                     ->columns($this->getColumns())
-                    ->minifiedAjax()
+                    ->minifiedAjax('',null,[
+                        'startDate' => "$('#start-date').val();",
+                        'endDate' => "$('#end-date').val();",
+                    ])
                     ->parameters(['initComplete'=>'function() {
                     const table = this.api();
                     const $thead = $(table.table().header());
@@ -77,7 +86,18 @@ class UsersDataTable extends DataTable
                     }
                     });
                     $thead.append($filterRow);
-                    }'])
+
+                   //date filter
+                   $("#start-date,#end-date").on("change",function(){
+                   const startDate=$("#start-date").val();
+                     const endDate=$("#end-date").val();
+                     if(startDate && endDate){
+                     table.ajax.reload();
+                     }
+                   });
+                    }'
+
+                    ])
                     ->orderBy(1)
                     ->selectStyleSingle()
                     ->buttons([
