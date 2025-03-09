@@ -55,6 +55,29 @@ class UsersDataTable extends DataTable
                     ->setTableId('users-table')
                     ->columns($this->getColumns())
                     ->minifiedAjax()
+                    ->parameters(['initComplete'=>'function() {
+                    const table = this.api();
+                    const $thead = $(table.table().header());
+                    const $filterRow=$thead.find("tr").clone().addClass("filter");
+                    $filterRow.find("th").each(function(){
+                    const $currentTh=$(this);
+                    if(!$currentTh.hasClass("no-search")){
+                     const input = $(`<input type="text" class="form-control form-control-sm" placeholder="Search ${$currentTh.text()}" />`)
+                     $currentTh.html(input);
+                     $(input).on("click",function(event){
+                     event.stopPropagation();
+                     });
+                    $(input).on("keyup change clear",function(event){
+                    if(table.column($currentTh.index()).search() !== this.value){
+                        table.column($currentTh.index()).search(this.value).draw();
+                    }
+                    });
+                    }else{
+                        $currentTh.empty();
+                    }
+                    });
+                    $thead.append($filterRow);
+                    }'])
                     ->orderBy(1)
                     ->selectStyleSingle()
                     ->buttons([
@@ -73,7 +96,7 @@ class UsersDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id'),
+            Column::make('id')->width(130),
             Column::make('name'),
             Column::make('email'),
             Column::make('created_at'),
@@ -82,7 +105,7 @@ class UsersDataTable extends DataTable
                 ->exportable(false)
                 ->printable(false)
                 ->width(100)
-                ->addClass('text-center'),
+                ->addClass('text-center no-search'),
         ];
     }
 
